@@ -1,7 +1,7 @@
 import json
+import pprint
 import requests
 import datetime as dt
-from flask import Response, jsonify
 from api.schemes.city_schema import CitySchema
 
 
@@ -16,6 +16,15 @@ class WeatherAPI:
             return data
         except:
             return None
+
+    def search_name(lat,lon):
+        url = 'https://api.openweathermap.org/geo/1.0/reverse?'
+        response = requests.get(
+            url+f'lat={lat}&lon={lon}&appid={WeatherAPI.key}').json()
+        result = response[0]
+        name=result['name']
+        return name
+
 
     def store(name, data):
 
@@ -46,21 +55,29 @@ class WeatherAPI:
                 c_id = str(response['id'])
                 lat = response['coord']['lat']
                 lon = response['coord']['lon']
+
+                # Search the name to store
+                name = WeatherAPI.search_name(lat,lon)
                 city_data = {
                     "city_id": c_id,
                     "lat": lat,
-                    "lon": lon
+                    "lon": lon,
+                    "name": str(name)
                 }
-                result = schema.dump(city_data)
-                return json.dumps({'message': result, 'cod': 200})
+                result = schema.load(city_data)
+                return json.dumps({'message': schema.dump(result), 'cod': 200})
             else:
                 return json.dumps({'message': None, 'cod': 404})
 
     def get_cities(cities):
         cities = str(cities).split(",")
+        schema = CitySchema()
         total = []
         for id_c in cities:
             result = WeatherAPI.get_city(id_c)
-            total.append(json.loads(result)['message'])
+            json_A = (json.loads(result))
+            total.append(json_A['message'])
         return json.dumps(total)
+
+
 
