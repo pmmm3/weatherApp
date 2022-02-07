@@ -1,13 +1,14 @@
 import json
 import pprint
+from flask import url_for
 import requests
 import datetime as dt
 from api.schemes.city_schema import CitySchema
-
+from pprint import pprint
 
 class WeatherAPI:
     key = "496a179d6bc08d2cca86e508d1d50c6f"
-
+# not used now
     def search(name):
         try:
             file = open(f'../bd/{name}.json')
@@ -16,7 +17,7 @@ class WeatherAPI:
             return data
         except:
             return None
-
+# not used now
     def search_name(lat,lon):
         url = 'https://api.openweathermap.org/geo/1.0/reverse?'
         response = requests.get(
@@ -25,7 +26,7 @@ class WeatherAPI:
         name=result['name']
         return name
 
-
+# not used now
     def store(name, data):
 
         try:
@@ -37,7 +38,6 @@ class WeatherAPI:
             raise('No se ha podido guardar el documento')
 
     def get_city(city_id):
-        str(city_id)
         # Search city in bd
         bd_id = WeatherAPI.search(city_id)
         if ((bd_id is not None) and
@@ -48,36 +48,31 @@ class WeatherAPI:
         else:
             # Make the openweathermap api call
 
-            url = f'https://api.openweathermap.org/data/2.5/weather?id={city_id}&appid={WeatherAPI.key}'
+            url = f'https://api.openweathermap.org/data/2.5/weather?id={city_id}&appid={WeatherAPI.key}&units=metric'
             response = requests.get(url).json()
-            if response['cod'] == 200:
-                schema = CitySchema()
-                c_id = str(response['id'])
-                lat = response['coord']['lat']
-                lon = response['coord']['lon']
 
-                # Search the name to store
-                name = WeatherAPI.search_name(lat,lon)
-                city_data = {
-                    "city_id": c_id,
-                    "lat": lat,
-                    "lon": lon,
-                    "name": str(name)
-                }
-                result = schema.load(city_data)
-                return json.dumps({'message': schema.dump(result), 'cod': 200})
-            else:
-                return json.dumps({'message': None, 'cod': 404})
+            return response
 
     def get_cities(cities):
         cities = str(cities).split(",")
-        schema = CitySchema()
         total = []
         for id_c in cities:
             result = WeatherAPI.get_city(id_c)
-            json_A = (json.loads(result))
-            total.append(json_A['message'])
-        return json.dumps(total)
+            total.append(result)
+        response = total
+        return response
+
+
+    def get_historical(cities):
+        cities = str(cities).split(",")
+        total=[]
+        for id_c in cities:
+            url = f'https://api.openweathermap.org/data/2.5/forecast?id={id_c}&appid={WeatherAPI.key}&units=metric&cnt=5'
+            response = requests.get(url).json()
+            total.append(response)
+
+        return total
+
 
 
 

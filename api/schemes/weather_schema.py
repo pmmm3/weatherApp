@@ -1,17 +1,7 @@
 import datetime as dt
-from marshmallow import Schema, ValidationError, fields, post_load, validates
-
-
-class Weather:
-    def __init__(self, main, description):
-        self.main = main
-        self.description = description
+from marshmallow import Schema, ValidationError, fields, validates
 
 
 class WeatherSchema(Schema):
-    main = fields.Str()
-    description = fields.Str()
-
-    @post_load
-    def make_weather(self, data, **kwargs):
-        return Weather(**data)
+    main = fields.Str(required=True, data_key='weather')
+    description = fields.Str(required=True, data_key='weather_description')
